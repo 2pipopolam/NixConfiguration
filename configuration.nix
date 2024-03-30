@@ -48,11 +48,12 @@
   # Enable the X11 windowing system.
   services.xserver.enable = true;
   services.xserver.libinput.enable = true;
-  # Enable the KDE Plasma Desktop Environment.
-  services.xserver.displayManager.sddm.enable = true;
-  services.desktopManager.plasma6.enable = true;
 
-  # Configure keymap in X11
+ # Enable the GNOME Desktop Environment.
+  services.xserver.displayManager.gdm.enable = true;
+  services.xserver.desktopManager.gnome.enable = true;
+
+ # Configure keymap in X11
   services.xserver = {
     xkb.layout = "us";
     xkb.variant = "";
@@ -81,6 +82,10 @@
   # Enable touchpad support (enabled default in most desktopManager).
   # services.xserver.libinput.enable = true;
 
+  #Enable flatpack
+  services.flatpak.enable = true;
+
+
   # Define a user account. Don't forget to set a password with ‘passwd’.
   users.users.alcorithm = {
     isNormalUser = true;
@@ -88,14 +93,21 @@
     extraGroups = [ "networkmanager" "wheel" ];
     packages = with pkgs; [
       firefox
-      kate
+      #kate
       discord
       telegram-desktop
-      dotnetCorePackages.sdk_6_0
+      dotnet-sdk_8
       dotnetPackages.Nuget
       mono
       msbuild
       qbittorrent
+      flatpak
+      virtualbox
+      gnome.gnome-software
+      distrobox
+      gnomeExtensions.prime-helper
+      podman
+
     ];
   };
 
@@ -112,7 +124,7 @@
     alacritty
     git
     neofetch
-    unityhub
+    #unityhub
     jetbrains.rider
     vscode.fhs
     htop
@@ -121,6 +133,7 @@
     steam-run
     helix
     python313Full
+    lshw
   ];
 
   #VirtualBox
@@ -129,6 +142,67 @@
   virtualisation.virtualbox.host.enableExtensionPack = true;
   #virtualisation.virtualbox.guest.enable = true;
   #virtualisation.virtualbox.guest.x11 = true;
+
+
+
+
+  # Enable OpenGL
+  hardware.opengl = {
+    enable = true;
+    driSupport = true;
+    driSupport32Bit = true;
+  };
+
+  # Load nvidia driver for Xorg and Wayland
+  services.xserver.videoDrivers = ["nvidia"];
+
+  hardware.nvidia = {
+
+    # Modesetting is required.
+    modesetting.enable = true;
+
+    # Nvidia power management. Experimental, and can cause sleep/suspend to fail.
+    # Enable this if you have graphical corruption issues or application crashes after waking
+    # up from sleep. This fixes it by saving the entire VRAM memory to /tmp/ instead
+    # of just the bare essentials.
+    # Fine-grained power management. Turns off GPU when not in use.
+
+    # Experimental and only works on modern Nvidia GPUs (Turing or newer).
+    powerManagement.finegrained = true;
+
+    # Use the NVidia open source kernel module (not to be confused with the
+    # independent third-party "nouveau" open source driver).
+    # Support is limited to the Turing and later architectures. Full list of
+    # supported GPUs is at:
+    # https://github.com/NVIDIA/open-gpu-kernel-modules#compatible-gpus
+    # Only available from driver 515.43.04+
+    # Currently alpha-quality/buggy, so false is currently the recommended setting.
+    open = true;
+
+
+    powerManagement.enable = true;
+
+    # Enable the Nvidia settings menu,
+	  #accessible via `nvidia-settings`.
+    nvidiaSettings = true;
+
+    # Optionally, you may need to select the appropriate driver version for your specific GPU.
+    package = config.boot.kernelPackages.nvidiaPackages.stable;
+  };
+
+
+
+    # Configuring Nvidia PRIME
+    hardware.nvidia.prime = {
+   offload.enable = true;
+
+   # Bus ID of the NVIDIA GPU. You can find it using lspci, either under 3D or VGA
+   nvidiaBusId = "PCI:1:0:0";
+
+   # Bus ID of the Intel GPU. You can find it using lspci, either under 3D or VGA
+   intelBusId = "PCI:0:2:0";
+  };
+
 
   #VScode
   #programs.vscode = {
@@ -151,8 +225,7 @@
   services.openssh.enable = true;
 
   hardware.bluetooth.enable = true; # enables support for Bluetooth
-  hardware.bluetooth.powerOnBoot =
-      true; # powers up the default Bluetooth controller on boot
+  hardware.bluetooth.powerOnBoot = true; # powers up the default Bluetooth controller on boot
 
   # Open ports in the firewall.
   # networking.firewall.allowedTCPPorts = [ ... ];
