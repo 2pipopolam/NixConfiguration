@@ -1,5 +1,5 @@
 # Edit this configuration file to define what should be installed on
-# your system. Help is available in the configuration.nix(5) man page
+# your system.  Help is available in the configuration.nix(5) man page
 # and in the NixOS manual (accessible by running ‘nixos-help’).
 
 { config, pkgs, ... }:
@@ -10,15 +10,12 @@
       ./hardware-configuration.nix
     ];
 
-  #Flake
-  nix.settings.experimental-features = [ "nix-command" "flakes" ];
-
   # Bootloader.
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
 
   networking.hostName = "nixos"; # Define your hostname.
-  # networking.wireless.enable = true; # Enables wireless support via wpa_supplicant.
+  # networking.wireless.enable = true;  # Enables wireless support via wpa_supplicant.
 
   # Configure network proxy if necessary
   # networking.proxy.default = "http://user:password@proxy:port/";
@@ -34,29 +31,28 @@
   i18n.defaultLocale = "en_US.UTF-8";
 
   i18n.extraLocaleSettings = {
-    LC_ADDRESS = "pt_PT.UTF-8";
-    LC_IDENTIFICATION = "pt_PT.UTF-8";
-    LC_MEASUREMENT = "pt_PT.UTF-8";
-    LC_MONETARY = "pt_PT.UTF-8";
-    LC_NAME = "pt_PT.UTF-8";
-    LC_NUMERIC = "pt_PT.UTF-8";
-    LC_PAPER = "pt_PT.UTF-8";
-    LC_TELEPHONE = "pt_PT.UTF-8";
-    LC_TIME = "pt_PT.UTF-8";
+    LC_ADDRESS = "en_US.UTF-8";
+    LC_IDENTIFICATION = "en_US.UTF-8";
+    LC_MEASUREMENT = "en_US.UTF-8";
+    LC_MONETARY = "en_US.UTF-8";
+    LC_NAME = "en_US.UTF-8";
+    LC_NUMERIC = "en_US.UTF-8";
+    LC_PAPER = "en_US.UTF-8";
+    LC_TELEPHONE = "en_US.UTF-8";
+    LC_TIME = "en_US.UTF-8";
   };
 
   # Enable the X11 windowing system.
   services.xserver.enable = true;
-  services.xserver.libinput.enable = true;
 
- # Enable the GNOME Desktop Environment.
-  services.xserver.displayManager.gdm.enable = true;
-  services.xserver.desktopManager.gnome.enable = true;
+  # Enable the KDE Plasma Desktop Environment.
+  services.xserver.displayManager.sddm.enable = true;
+  services.desktopManager.plasma6.enable = true;
 
- # Configure keymap in X11
+  # Configure keymap in X11
   services.xserver = {
-    xkb.layout = "us";
-    xkb.variant = "";
+    layout = "us";
+    xkbVariant = "";
   };
 
   # Enable CUPS to print documents.
@@ -82,150 +78,150 @@
   # Enable touchpad support (enabled default in most desktopManager).
   # services.xserver.libinput.enable = true;
 
-  #Enable flatpack
-  services.flatpak.enable = true;
-
-
   # Define a user account. Don't forget to set a password with ‘passwd’.
   users.users.alcorithm = {
     isNormalUser = true;
-    description = "alcorithm";
+    description = "Nikolai Telin";
     extraGroups = [ "networkmanager" "wheel" ];
     packages = with pkgs; [
       firefox
       #kate
-      discord
-      telegram-desktop
-      dotnet-sdk_8
-      dotnetPackages.Nuget
-      mono
-      msbuild
-      qbittorrent
-      flatpak
-      virtualbox
-      gnome.gnome-software
-      distrobox
-      gnomeExtensions.prime-helper
-      podman
-
+      #thunderbird
     ];
   };
 
+
+  #ZSH
+
+  users.defaultUserShell=pkgs.zsh;
+
+  programs = {
+   zsh = {
+      enable = true;
+      autosuggestions.enable = true;
+      zsh-autoenv.enable = true;
+      syntaxHighlighting.enable = true;
+      promptInit = "source ${pkgs.zsh-powerlevel10k}/share/zsh-powerlevel10k/powerlevel10k.zsh-theme";
+        ohMyZsh = {
+         enable = true;
+         theme = "agnoster";
+         plugins = [
+           "git"
+           "npm"
+           "history"
+           "node"
+           "rust"
+           "deno"
+         ];
+      };
+   };
+};
+
+
+fonts.packages = with pkgs; [
+  (nerdfonts.override { fonts = [ "FiraCode" "DroidSansMono" ]; })
+];
+
+
+
+
   # Allow unfree packages
   nixpkgs.config.allowUnfree = true;
-  nixpkgs.config.asystem = "x86_64-linux";
 
   # List packages installed in system profile. To search, run:
   # $ nix search wget
   environment.systemPackages = with pkgs; [
-    vim # Do not forget to add an editor to edit configuration.nix! The Nano editor is also installed by default.
-    wget
-    fish
+    #nix-software-center
+  	vim # Do not forget to add an editor to edit configuration.nix! The Nano editor is also installed by default.
+  	wget
+	  vivaldi
+	  helix
+	  git
     alacritty
-    git
-    neofetch
-    #unityhub
-    jetbrains.rider
-    vscode.fhs
+    vscode
+    kitty
     htop
-    gcc
-    direnv
-    steam-run
-    helix
-    python313Full
-    lshw
+    nvtopPackages.nvidia
+    fastfetch
+    freeoffice
+    devenv
+    comma
+    telegram-desktop
+    cordless
+    webcord
   ];
-
-  #VirtualBox
-  virtualisation.virtualbox.host.enable = true;
-  users.extraGroups.vboxusers.members = [ "alcorithm" ];
-  virtualisation.virtualbox.host.enableExtensionPack = true;
-  #virtualisation.virtualbox.guest.enable = true;
-  #virtualisation.virtualbox.guest.x11 = true;
-
-
-
-
-  # Enable OpenGL
-  hardware.opengl = {
-    enable = true;
-    driSupport = true;
-    driSupport32Bit = true;
-  };
-
-  # Load nvidia driver for Xorg and Wayland
-  services.xserver.videoDrivers = ["nvidia"];
-
-  hardware.nvidia = {
-
-    # Modesetting is required.
-    modesetting.enable = true;
-
-    # Nvidia power management. Experimental, and can cause sleep/suspend to fail.
-    # Enable this if you have graphical corruption issues or application crashes after waking
-    # up from sleep. This fixes it by saving the entire VRAM memory to /tmp/ instead
-    # of just the bare essentials.
-    # Fine-grained power management. Turns off GPU when not in use.
-
-    # Experimental and only works on modern Nvidia GPUs (Turing or newer).
-    powerManagement.finegrained = true;
-
-    # Use the NVidia open source kernel module (not to be confused with the
-    # independent third-party "nouveau" open source driver).
-    # Support is limited to the Turing and later architectures. Full list of
-    # supported GPUs is at:
-    # https://github.com/NVIDIA/open-gpu-kernel-modules#compatible-gpus
-    # Only available from driver 515.43.04+
-    # Currently alpha-quality/buggy, so false is currently the recommended setting.
-    open = true;
-
-
-    powerManagement.enable = true;
-
-    # Enable the Nvidia settings menu,
-	  #accessible via `nvidia-settings`.
-    nvidiaSettings = true;
-
-    # Optionally, you may need to select the appropriate driver version for your specific GPU.
-    package = config.boot.kernelPackages.nvidiaPackages.stable;
-  };
-
-
-
-    # Configuring Nvidia PRIME
-    hardware.nvidia.prime = {
-   offload.enable = true;
-
-   # Bus ID of the NVIDIA GPU. You can find it using lspci, either under 3D or VGA
-   nvidiaBusId = "PCI:1:0:0";
-
-   # Bus ID of the Intel GPU. You can find it using lspci, either under 3D or VGA
-   intelBusId = "PCI:0:2:0";
-  };
-
-
-  #VScode
-  #programs.vscode = {
-  #enable = true;
-  #package = pkgs.vscode.fhs;
-  #package = pkgs.vscode.fhsWithPackages (ps: with ps; [ rustup zlib openssl.dev pkg-config ]);
-  #};
 
   # Some programs need SUID wrappers, can be configured further or are
   # started in user sessions.
-  # programs.mtr.enable = true;
-  # programs.gnupg.agent = {
-  # enable = true;
-  # enableSSHSupport = true;
-  # };
+    programs.mtr.enable = true;
+    programs.gnupg.agent = {
+      enable = true;
+      enableSSHSupport = true;
+    };
+
+  # Enable OpenGL
+hardware.opengl = {
+enable = true;
+#driSupport = true;
+driSupport32Bit = true;
+};
+
+# Load nvidia driver for Xorg and Wayland
+services.xserver.videoDrivers = ["nvidia"];
+
+hardware.nvidia = {
+
+  # Modesetting is required.
+  modesetting.enable = true;
+
+  # Nvidia power management. Experimental, and can cause sleep/suspend to fail.
+  # Enable this if you have graphical corruption issues or application crashes after waking
+  # up from sleep. This fixes it by saving the entire VRAM memory to /tmp/ instead
+  # of just the bare essentials.
+  # Fine-grained power management. Turns off GPU when not in use.
+
+  # Experimental and only works on modern Nvidia GPUs (Turing or newer).
+  powerManagement.finegrained = true;
+
+  # Use the NVidia open source kernel module (not to be confused with the
+  # independent third-party "nouveau" open source driver).
+  # Support is limited to the Turing and later architectures. Full list of
+  # supported GPUs is at:
+  # https://github.com/NVIDIA/open-gpu-kernel-modules#compatible-gpus
+  # Only available from driver 515.43.04+
+  # Currently alpha-quality/buggy, so false is currently the recommended setting.
+  open = true;
+
+  powerManagement.enable = true;
+
+  # Enable the Nvidia settings menu,
+  #accessible via `nvidia-settings`.
+  nvidiaSettings = true;
+
+  # Optionally, you may need to select the appropriate driver version for your specific GPU.
+  package = config.boot.kernelPackages.nvidiaPackages.stable;
+};
+
+# Configuring Nvidia PRIME
+hardware.nvidia.prime = {
+  offload.enable = true;
+
+  # Bus ID of the NVIDIA GPU. You can find it using lspci, either under 3D or VGA
+  nvidiaBusId = "PCI:1:0:0";
+
+  # Bus ID of the Intel GPU. You can find it using lspci, either under 3D or VGA
+  intelBusId = "PCI:0:2:0";
+};
+
+
 
   # List services that you want to enable:
 
   # Enable the OpenSSH daemon.
-  services.openssh.enable = true;
+    services.openssh.enable = true;
 
-  hardware.bluetooth.enable = true; # enables support for Bluetooth
-  hardware.bluetooth.powerOnBoot = true; # powers up the default Bluetooth controller on boot
+    hardware.bluetooth.enable = true; # enables support for Bluetooth
+    hardware.bluetooth.powerOnBoot = true; # powers up the default Bluetooth controller on boot
 
   # Open ports in the firewall.
   # networking.firewall.allowedTCPPorts = [ ... ];
@@ -239,5 +235,6 @@
   # this value at the release version of the first install of this system.
   # Before changing this value read the documentation for this option
   # (e.g. man configuration.nix or on https://nixos.org/nixos/options.html).
-  system.stateVersion = "23.11"; # Did you read the comment?
+  system.stateVersion = "24.11"; # Did you read the comment?
+
 }
